@@ -1,0 +1,109 @@
+Autor: Angel Luis Valdés Sánchez
+Fecha: Mayo 2025
+Descripción: Especificación del registro y gestión de calificaciones para estudiantes.
+
+─ [ ESTUDIANTE, ICONO ] └
+
+RespuestaToast ::= 
+  calificacion_ok 
+  | calificacion_fuera_de_rango 
+  | estudiante_no_encontrado 
+  | tiempo_excedido 
+  | calificacion_ya_registrada
+
+┌ Calificaciones
+  calif: ℙ (ESTUDIANTE × ℕ)
+  fechaRegistro: ESTUDIANTE ⇸ ℕ
+|
+  ∀ e: ESTUDIANTE @ e ∈ dom calif ⇒ 0 ≤ calif~e ≤ 10
+  dom calif = dom fechaRegistro
+└
+
+┌ InitCalificaciones
+  calif: ℙ (ESTUDIANTE × ℕ)
+  fechaRegistro: ESTUDIANTE ⇸ ℕ
+|
+  calif = ∅
+  fechaRegistro = ∅
+└
+
+┌ GuardarCalificacion
+  ΔCalificaciones
+  estudiante?: ESTUDIANTE
+  nota?: ℕ
+  hoy?: ℕ
+  mensaje!: RespuestaToast
+|
+  0 ≤ nota? ≤ 10 ∧
+  calif' = calif ∪ { (estudiante?, nota?) } ∧
+  fechaRegistro' = fechaRegistro ⊕ { estudiante? ↦ hoy? } ∧
+  mensaje! = calificacion_ok
+└
+
+┌ ErrorCalifFueraDeRango
+  nota?: ℕ
+  mensaje!: RespuestaToast
+|
+  nota? < 0 ∨ nota? > 10 ∧
+  mensaje! = calificacion_fuera_de_rango
+└
+
+IngresoCalifRobusto == GuardarCalificacion ∨ ErrorCalifFueraDeRango
+
+┌ ModificarCalificacion
+  ΔCalificaciones
+  estudiante?: ESTUDIANTE
+  prevNota?: ℕ
+  nuevaNota?: ℕ
+  hoy?: ℕ
+  mensaje!: RespuestaToast
+|
+  (estudiante?, prevNota?) ∈ calif ∧
+  0 ≤ nuevaNota? ≤ 10 ∧
+  hoy? - fechaRegistro~estudiante? ≤ 3 ∧
+  calif' = (calif \ { (estudiante?, prevNota?) }) ∪ { (estudiante?, nuevaNota?) } ∧
+  fechaRegistro' = fechaRegistro ⊕ { estudiante? ↦ hoy? } ∧
+  mensaje! = calificacion_ok
+└
+
+┌ ErrorNoExisteCalif
+  estudiante?: ESTUDIANTE
+  mensaje!: RespuestaToast
+|
+  estudiante? ∉ dom calif ∧
+  mensaje! = estudiante_no_encontrado
+└
+
+┌ ErrorTiempoExcedido
+  estudiante?: ESTUDIANTE
+  hoy?: ℕ
+  mensaje!: RespuestaToast
+|
+  estudiante? ∈ dom calif ∧ hoy? - fechaRegistro~estudiante? > 3 ∧
+  mensaje! = tiempo_excedido
+└
+
+ModificarCalifRobusta == ModificarCalificacion ∨ ErrorNoExisteCalif ∨ ErrorTiempoExcedido
+
+┌ ReporteRendimiento
+  ΞCalificaciones
+  estudiante?: ESTUDIANTE
+  calificaciones!: seq ℕ
+  promedio!: ℕ
+|
+  estudiante? ∈ dom calif ∧
+  calificaciones! = ⟨ n: ℕ | (estudiante?, n) ∈ calif ⟩ ∧
+  #calificaciones! > 0 ∧
+  promedio! = (∑ calificaciones!) ÷ (# calificaciones!)
+└
+
+┌ ErrorEstudianteNoEncontrado
+  ΞCalificaciones
+  estudiante?: ESTUDIANTE
+  mensaje!: RespuestaToast
+|
+  estudiante? ∉ dom calif ∧
+  mensaje! = estudiante_no_encontrado
+└
+
+ReporteRendimientoRobusto == ReporteRendimiento ∨ ErrorEstudianteNoEncontrado
