@@ -1,0 +1,86 @@
+─ [ ESTUDIANTE, FORMATO ] └
+
+ICONO ::= verde | rojo
+𝔹 ::= true | false
+
+RespuestaToast ::= 
+  calificacion_ok 
+  | calificacion_fuera_de_rango
+
+RespuestaExportacion ::= 
+  exportacion_exitosa 
+  | formato_no_soportado
+
+FORMATO ::= pdf | csv | excel
+
+┌ Calificaciones
+  calif: ℙ (ESTUDIANTE × ℕ)
+└
+
+┌ ValidarRangoCalificacion
+  nota?: ℕ
+  mensaje!: RespuestaToast
+|
+  0 ≤ nota? ≤ 10 ∧
+  mensaje! = calificacion_ok
+└
+
+┌ ErrorCalificacionFueraDeRango
+  nota?: ℕ
+  mensaje!: RespuestaToast
+|
+  nota? < 0 ∨ nota? > 10 ∧
+  mensaje! = calificacion_fuera_de_rango
+└
+
+┌ MostrarToastExito
+  mensaje!: RespuestaToast
+  icono!: ICONO
+  duracion!: ℕ
+  visible!: 𝔹
+|
+  visible! = true ∧
+  icono! = verde ∧
+  duracion! = 3 ∧
+  mensaje! = calificacion_ok
+└
+
+┌ MostrarToastError
+  mensaje!: RespuestaToast
+  icono!: ICONO
+  duracion!: ℕ
+  visible!: 𝔹
+|
+  visible! = true ∧
+  icono! = rojo ∧
+  duracion! = 3 ∧
+  mensaje! = calificacion_fuera_de_rango
+└
+
+ValidacionRangoRobusta == 
+  (ValidarRangoCalificacion ∧ MostrarToastExito)
+  ∨
+  (ErrorCalificacionFueraDeRango ∧ MostrarToastError)
+
+┌ ExportarCalificaciones
+  ΞCalificaciones
+  formato?: FORMATO
+  archivoGenerado!: 𝔹
+  mensaje!: RespuestaExportacion
+|
+  formato? ∈ { pdf, csv, excel } ∧
+  archivoGenerado! = true ∧
+  mensaje! = exportacion_exitosa
+└
+
+┌ ErrorFormatoNoSoportado
+  formato?: FORMATO
+  archivoGenerado!: 𝔹
+  mensaje!: RespuestaExportacion
+|
+  formato? ∉ { pdf, csv, excel } ∧
+  archivoGenerado! = false ∧
+  mensaje! = formato_no_soportado
+└
+
+ExportacionCalificacionesRobusta == ExportarCalificaciones ∨ ErrorFormatoNoSoportado
